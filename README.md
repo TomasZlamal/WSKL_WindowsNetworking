@@ -6,7 +6,7 @@ If you don't want any logging, undefine DEBUG_MODE. This is a very bare-bones li
 
 If you want an example of code, here is code for the client side:
 
-#include <iostream>
+#include <iostream> 
 #include "Client/include/networking/Sockets/ClSocket.hpp"
 
 int main() {
