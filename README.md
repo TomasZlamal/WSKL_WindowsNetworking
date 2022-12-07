@@ -5,7 +5,7 @@ I personally recommend you to try out the base WSKL Socket classes and then exte
 If you don't want any logging, undefine DEBUG_MODE. This is a very bare-bones library, so use mainly it for learning.
 
 If you want an example of code, here is code for the client side:
-
+```c++
 #include "Client/include/networking/Sockets/ClSocket.hpp"
 
 int main() {
@@ -27,9 +27,9 @@ int main() {
 #endif
     return 0;
 }
-
+```
 And for the server side:
-
+```c++
 #include "Server/include/networking/ServerSocket.hpp"
 void processClientData(const std::string& data, std::string& response) {
     // code for processing inputs here
@@ -57,3 +57,4 @@ int main(){
     WSKL::ServerSocket::wait();
 #endif
 }
+```
