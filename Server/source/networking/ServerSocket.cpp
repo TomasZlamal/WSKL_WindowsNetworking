@@ -13,8 +13,7 @@ WSKL::ServerSocket::ServerSocket(const char* port)
     m_ClientSocket = INVALID_SOCKET;
 
     m_result = NULL;
-
-    int iSendm_result;
+    
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
 
