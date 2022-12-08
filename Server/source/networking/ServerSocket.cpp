@@ -32,23 +32,10 @@ WSKL::ServerSocket::ServerSocket(const char* port)
         WSACleanup();
         throw SocketException("getaddrinfo failed with error: " + m_iresult);
     }
-    m_ListenSocket = socket(m_result->ai_family, m_result->ai_socktype, m_result->ai_protocol);
-    if (m_ListenSocket == INVALID_SOCKET) {
-        freeaddrinfo(m_result);
-        WSACleanup();
-        throw SocketException("socket failed with error: " + WSAGetLastError());
-    }
 }
 
 void WSKL::ServerSocket::setUpSocket()
 {
-    m_iresult = getaddrinfo(NULL, DEFAULT_PORT, &m_hints, &m_result);
-    if (m_iresult != 0) {
-        WSACleanup();
-        throw SocketException("getaddrinfo failed with error: " + m_iresult);
-    }
-
-    // Initialize the ListenSocket for the server to listen for client connections.
     m_ListenSocket = socket(m_result->ai_family, m_result->ai_socktype, m_result->ai_protocol);
     if (m_ListenSocket == INVALID_SOCKET) {
         freeaddrinfo(m_result);
@@ -56,7 +43,7 @@ void WSKL::ServerSocket::setUpSocket()
         throw SocketException("socket failed with error: " + WSAGetLastError());
     }
 
-    // Setup the TCP listening socket
+    // Setup TCP listenSocket
     m_iresult = bind(m_ListenSocket, m_result->ai_addr, (int)m_result->ai_addrlen);
     if (m_iresult == SOCKET_ERROR) {
         freeaddrinfo(m_result);
