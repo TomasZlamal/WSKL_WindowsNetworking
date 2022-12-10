@@ -81,9 +81,8 @@ std::string WSKL::ServerSocket::getDataFromClient() {
         m_iresult = recv(m_ClientSocket, recvbuf, recvbuflen, 0);
         if (m_iresult > 0) {
             log("Bytes recieved: " << m_iresult << std::endl);
-            if (m_iresult > 1) 
-                for (int i = 0; i < m_iresult; i++) 
-                    output << recvbuf[i];
+            for (int i = 0; i < m_iresult; i++) 
+                output << recvbuf[i];
         }
         else if (m_iresult == 0)
             log("No more client input...\n");
