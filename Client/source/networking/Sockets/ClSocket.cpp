@@ -75,10 +75,8 @@ std::string WSKL::ClientSocket::recieveData()
     // Receive data
     do {
         m_iresult = recv(m_ConnectSock, recvbuf, recvbuflen, 0);
-        if (m_iresult > 0) {
-            for (int i = 0; i < m_iresult; i++) {
-                output << recvbuf[i];
-            }
+        for (int i = 0; i < m_iresult; i++)
+            output << recvbuf[i];
         }
         if (m_iresult > 0)
             log("Bytes recieved: " << m_iresult << std::endl);
