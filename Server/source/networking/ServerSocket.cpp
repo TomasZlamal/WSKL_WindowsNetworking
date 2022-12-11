@@ -7,19 +7,29 @@ WSKL::ServerSocket::ServerSocket()
 
 WSKL::ServerSocket::ServerSocket(const char* port)
 {
+    initSocket(port);
+    bindSocket(port);
+}
+
+WSKL::ServerSocket::~ServerSocket()
+{
+    if (!m_isClosed)
+        cleanUp();
+}
+
+void WSKL::ServerSocket::initSocket(const char* port)
+{
     WSADATA wsaData;
+    m_isClosed = false;
 
     m_ListenSocket = INVALID_SOCKET;
     m_ClientSocket = INVALID_SOCKET;
 
-    m_result = NULL;
-    
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
+    m_result = nullptr;
 
     // Initialize Winsock
     m_iresult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (m_iresult != 0) 
+    if (m_iresult != 0)
         throw SocketException("WSAStartup failed with error: " + m_iresult);
 
     ZeroMemory(&m_hints, sizeof(m_hints));
@@ -27,15 +37,32 @@ WSKL::ServerSocket::ServerSocket(const char* port)
     m_hints.ai_socktype = SOCK_STREAM;
     m_hints.ai_protocol = IPPROTO_TCP;
     m_hints.ai_flags = AI_PASSIVE;
+}
+
+void WSKL::ServerSocket::bindSocket(const char* port)
+{
     m_iresult = getaddrinfo(NULL, port, &m_hints, &m_result);
     if (m_iresult != 0) {
         WSACleanup();
         throw SocketException("getaddrinfo failed with error: " + m_iresult);
     }
+    m_ListenSocket = socket(m_result->ai_family, m_result->ai_socktype, m_result->ai_protocol);
+    if (m_ListenSocket == INVALID_SOCKET) {
+        freeaddrinfo(m_result);
+        WSACleanup();
+        throw SocketException("socket failed with error: " + WSAGetLastError());
+    }
 }
 
 void WSKL::ServerSocket::setUpSocket()
 {
+    m_iresult = getaddrinfo(NULL, DEFAULT_PORT, &m_hints, &m_result);
+    if (m_iresult != 0) {
+        WSACleanup();
+        throw SocketException("getaddrinfo failed with error: " + m_iresult);
+    }
+
+    // Initialize the ListenSocket for the server to listen for client connections.
     m_ListenSocket = socket(m_result->ai_family, m_result->ai_socktype, m_result->ai_protocol);
     if (m_ListenSocket == INVALID_SOCKET) {
         freeaddrinfo(m_result);
@@ -43,7 +70,7 @@ void WSKL::ServerSocket::setUpSocket()
         throw SocketException("socket failed with error: " + WSAGetLastError());
     }
 
-    // Setup TCP listenSocket
+    // Setup the TCP listening socket
     m_iresult = bind(m_ListenSocket, m_result->ai_addr, (int)m_result->ai_addrlen);
     if (m_iresult == SOCKET_ERROR) {
         freeaddrinfo(m_result);
@@ -63,7 +90,7 @@ void WSKL::ServerSocket::listenForClient()
         WSACleanup();
         throw SocketException("listen failed with error: " + WSAGetLastError());
     }
-    log("Waiting for client operation... " << std::endl);
+    log("Waiting for client operation... \n");
     // Accept a client socket
     m_ClientSocket = accept(m_ListenSocket, NULL, NULL);
     if (m_ClientSocket == INVALID_SOCKET) {
@@ -80,9 +107,10 @@ std::string WSKL::ServerSocket::getDataFromClient() {
     do {
         m_iresult = recv(m_ClientSocket, recvbuf, recvbuflen, 0);
         if (m_iresult > 0) {
-            log("Bytes recieved: " << m_iresult << std::endl);
-            for (int i = 0; i < m_iresult; i++) 
-                output << recvbuf[i];
+            log(std::string("Bytes recieved: ") + std::to_string(m_iresult));
+            if (m_iresult > 1) 
+                for (int i = 0; i < m_iresult; i++) 
+                    output << recvbuf[i];
         }
         else if (m_iresult == 0)
             log("No more client input...\n");
@@ -110,6 +138,7 @@ void WSKL::ServerSocket::cleanUp()
 {
     closesocket(m_ClientSocket);
     WSACleanup();
+    m_isClosed = true;
 }
 void WSKL::ServerSocket::wait() {
     // for debugging purposes, so cmd doesn't immediately close
@@ -125,5 +154,5 @@ void WSKL::ServerSocket::send_data(const std::string& str)
         WSACleanup();
         throw SocketException("send failed with error:" + WSAGetLastError());
     }
-    log("Bytes sent: " << iSendResult << std::endl);
+    log(std::string("Bytes sent: ") + std::to_string(iSendResult));
 }

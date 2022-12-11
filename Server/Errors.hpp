@@ -13,7 +13,9 @@ namespace WSKL {
         virtual const char* c_str() const noexcept {
             return msg_.c_str();
         }
-
+        std::string str() const {
+            return msg_;
+        }
     protected:
         std::string msg_;
     };
